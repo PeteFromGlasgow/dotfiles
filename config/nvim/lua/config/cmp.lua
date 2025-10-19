@@ -1,14 +1,14 @@
+  local luasnip = require('luasnip')
+  require("luasnip.loaders.from_vscode").load()
   local cmp = require('cmp')
 
   cmp.setup({
     snippet = {
       expand = function(args)
-        require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
+        luasnip.lsp_expand(args.body) -- For `luasnip` users.
       end,
     },
     window = {
-      completion = cmp.config.window.bordered(),
-      documentation = cmp.config.window.bordered(),
     },
     mapping = cmp.mapping.preset.insert({
       ['<C-b>'] = cmp.mapping.scroll_docs(-4),
@@ -19,12 +19,37 @@
     }),
     sources = cmp.config.sources({
       { name = 'nvim_lsp' },
-      { name = 'luasnip' }, -- For luasnip users.
-    }, {
+      { name = 'luasnip' },
       { name = 'buffer' },
     })
   })
 
+  local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
+  for type, icon in pairs(signs) do
+    local hl = "DiagnosticSign" .. type
+    vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+  end
+
+      -- Global diagnostic configuration
+  vim.diagnostic.config({
+        virtual_text = true, -- Show diagnostics as virtual text (inline)
+        signs = true, -- Show signs in the gutter
+        underline = true, -- Underline diagnostics
+        update_in_insert = false, -- Don't update diagnostics in insert mode
+        severity_sort = true, -- Sort diagnostics by severity
+        float = {
+          focusable = false,
+          style = "minimal",
+          border = "rounded",
+          source = "always", -- Or "if_many"
+          header = "",
+          prefix = "",
+        },
+  })
+  
+  vim.keymap.set({"i"}, "<C-K>", function() luasnip.expand() end, {silent = true})
+  vim.keymap.set({"i", "s"}, "<C-L>", function() luasnip.jump( 1) end, {silent = true})
+  vim.keymap.set({"i", "s"}, "<C-J>", function() luasnip.jump(-1) end, {silent = true})
   -- To use git you need to install the plugin petertriho/cmp-git and uncomment lines below
   -- Set configuration for specific filetype.
   --[[ cmp.setup.filetype('gitcommit', {
